@@ -35,7 +35,6 @@ func NewWebsocketDialer(ctx context.Context) *WebsocketDialer {
 }
 
 func (c *WebsocketDialer) Dial(dst string) (net.Conn, error) {
-	fmt.Println("ws Dialing:", dst)
 	u, err := core.NewURL(dst)
 	if err != nil {
 		return nil, err
@@ -59,7 +58,6 @@ func (c *WebsocketDialer) Dial(dst string) (net.Conn, error) {
 	// 检查是否需要使用代理
 	if proxyAddrs, exists := c.meta["proxyAddr"]; exists {
 		if proxyAddrSlice, ok := proxyAddrs.([]string); ok && len(proxyAddrSlice) > 0 {
-			// 使用代理建立 WebSocket 连接
 			var proxies []*url.URL
 			for _, proxyUrl := range proxyAddrSlice {
 				proxyU, err := url.Parse(proxyUrl)
@@ -74,12 +72,11 @@ func (c *WebsocketDialer) Dial(dst string) (net.Conn, error) {
 				return nil, fmt.Errorf("failed to create proxy chain: %v", err)
 			}
 
-			// 通过代理建立到目标主机的 TCP 连接
 			tcpConn, err := proxy.Dial("tcp", u.Host)
 			if err != nil {
 				return nil, fmt.Errorf("failed to dial via proxy: %v", err)
 			}
-			// 在已建立的 TCP 连接上升级为 WebSocket
+			// TCP升级为WebSocket
 			conn, err := websocket.NewClient(conf, tcpConn)
 			if err != nil {
 				tcpConn.Close()
@@ -88,8 +85,6 @@ func (c *WebsocketDialer) Dial(dst string) (net.Conn, error) {
 			return conn, nil
 		}
 	}
-
-	// 没有代理时使用标准方式
 	conn, err := websocket.DialConfig(conf)
 	if err != nil {
 		return nil, err
@@ -128,7 +123,6 @@ func (c *WebsocketListener) Listen(dst string) (net.Listener, error) {
 	c.acceptCh = make(chan *websocket.Conn)
 	muxer := http.NewServeMux()
 	muxer.Handle(u.Path, websocket.Handler(func(conn *websocket.Conn) {
-		fmt.Println("WebSocket connection established:", conn.RemoteAddr())
 		notifyCh := make(chan struct{})
 		c.acceptCh <- conn
 		<-notifyCh

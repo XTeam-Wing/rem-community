@@ -22,10 +22,12 @@ func (w *WrappedDialer) Dial(dst string) (net.Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid address %s: %v", dst, err)
 	}
-	if u.Scheme != "ws" && u.Scheme != "wss" && w.Dialer != nil {
-		return w.Dialer(dst)
+	if u.Scheme != "ws" && u.Scheme != "wss" {
+		if w.Dialer != nil {
+			return w.Dialer(dst)
+		}
 	}
-	return w.Dial(dst)
+	return w.TunnelDialer.Dial(dst)
 }
 
 type TunnelListener interface {
