@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"net/url"
 )
 
 type TunnelDialer interface {
@@ -17,7 +18,11 @@ type WrappedDialer struct {
 }
 
 func (w *WrappedDialer) Dial(dst string) (net.Conn, error) {
-	if w.Dialer != nil {
+	u, err := url.Parse(dst)
+	if err != nil {
+		return nil, fmt.Errorf("invalid address %s: %v", dst, err)
+	}
+	if u.Scheme != "ws" && u.Scheme != "wss" && w.Dialer != nil {
 		return w.Dialer(dst)
 	}
 	return w.Dial(dst)

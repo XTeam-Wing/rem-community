@@ -3,6 +3,7 @@ package tunnel
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"math"
 	"net"
 	"net/url"
@@ -121,6 +122,8 @@ func WithTLSInTLS() TunnelOption {
 
 func WithProxyClient(proxyAddr []string) TunnelOption {
 	return newFuncTunnelOption(func(do *TunnelService) {
+		// 将代理信息保存到meta中，供各种dialer使用
+		do.meta["proxyAddr"] = proxyAddr
 		do.dialer = &core.WrappedDialer{
 			TunnelDialer: do.dialer,
 			Dialer: func(dst string) (net.Conn, error) {
@@ -140,7 +143,7 @@ func WithProxyClient(proxyAddr []string) TunnelOption {
 				if err != nil {
 					return nil, err
 				}
-				conn, err := proxy.Dial(u.Scheme, u.Host)
+				conn, err := proxy.Dial("tcp", u.Host)
 				if err != nil {
 					return nil, err
 				}
