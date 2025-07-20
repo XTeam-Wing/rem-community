@@ -14,7 +14,7 @@ TRANSPORT=""
 
 # 设置默认值
 DEFAULT_APPLICATION="http,raw,socks,portforward"
-DEFAULT_TRANSPORT="tcp,websocket"
+DEFAULT_TRANSPORT="tcp,udp"
 
 # 解析命令行参数
 while getopts "m:c:l:r:o:a:t:" opt; do
@@ -110,5 +110,5 @@ fi
 if [ ! -z "$OSARCH" ]; then
     gox -osarch="$OSARCH" -ldflags "$LDFLAGS" -output="rem_{{.OS}}_{{.Arch}}" .
 else
-    go build -ldflags "$LDFLAGS" -o bin/rem-darwin-arm64 .
-fi 
+    garble -tiny -seed=random build -ldflags "$LDFLAGS" -trimpath -o bin/rem-$GOOS-$GOARCH
+fi
